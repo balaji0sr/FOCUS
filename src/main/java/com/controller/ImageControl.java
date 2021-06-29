@@ -1,8 +1,11 @@
 //$Id$
 package com.controller;
 
+import java.io.BufferedInputStream;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.sql.SQLException;
 import java.util.Base64;
 import java.util.Iterator;
@@ -13,7 +16,10 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.StreamUtils;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -21,10 +27,11 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import com.google.gson.Gson;
+import com.object.Image;
 import com.service.ImageCRUD;
 
 @Controller
-public class ImageUpload {
+public class ImageControl {
 
 	@RequestMapping(value = "/imageservice", method = RequestMethod.POST)
 	@ResponseBody
@@ -61,5 +68,17 @@ public class ImageUpload {
 			res.getWriter().write(gsonstring);
 			return;
 		}
+	}
+	
+	@RequestMapping(value = "/imageservice/{imageid}", method = RequestMethod.GET, produces = MediaType.IMAGE_JPEG_VALUE)
+	public void getImage(@PathVariable("imageid") long imageid, HttpServletResponse response) throws IOException {
+
+		Image i = ImageCRUD.read(imageid);
+		String path = i.getPath();
+
+		InputStream is = new BufferedInputStream(new FileInputStream(path));
+
+		response.setContentType(MediaType.IMAGE_JPEG_VALUE);
+		StreamUtils.copy(is, response.getOutputStream());
 	}
 }
